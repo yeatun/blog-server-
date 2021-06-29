@@ -1,9 +1,13 @@
 const express = require('express');
-
+const bodyParser = require('body-parser');
 const cors = require('cors');
-
+const ObjectId = require('mongodb').ObjectId;
 const MongoClient = require('mongodb').MongoClient;
 require('dotenv').config();
+
+
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ggzrw.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
+
 
 const app = express();
 
@@ -15,7 +19,7 @@ const port =process.env.PORT ||  5000;
 
 
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ggzrw.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
+
 
 app.get('/', (req, res) => {
     res.send("hello from db it's working ")
@@ -62,34 +66,66 @@ app.post('/addReview', (req, res) => {
         res.send(result.insertedCount > 0)
     })
 })
-app.post('/addAdmin', (req, res) => {
+app.post('/addAdmin', (request, res) => {
   
-      const email = req.body.email;
-      console.log(email)
-   
-    
-      adminCollection.insertOne({ email})
-          .then(result => {
-              res.send(result.insertedCount > 0);
-          })
-    }) 
-    // app.post('/addAdmin', (req, res) => {
-   
-    //     const email = req.body.email;
-    //     adminCollection.find({ email: email })
-    //         .toArray((err, service) => {
-    //             const filter = { date: date.date }
-    //             if (service.length === 0) {
-    //                 filter.email = email;
-    //             }
-    //          collection.find(filter)
-    //                 .toArray((err, documents) => {
-    //                     console.log(email, date.date, service, documents)
-    //                     res.send(documents);
-    //                 })
-    //         })
-    
-    // })
+
+    const email = request.body.email;
+    const password = request.body.password;
+    console.log(email,password)
+ 
+    adminCollection.insertOne({  email ,password})
+        .then(result => {
+            res.send(result.insertedCount > 0);
+        })
+        adminCollection
+      .find({ email: req.body.email })
+      .toArray()
+      .then((result) => {
+        if (result.length < 1) {
+          console.log("user not found");
+          return res.send(false);
+        }
+        adminCollection
+          .find({ password: req.body.password })
+          .toArray()
+          .then((documents) => {
+            if (documents.length < 1) {
+              console.log("password not found");
+              return res.send(false);
+            } else {
+              res.send(true);
+              console.log("successfully logged in");
+            }
+          });
+      })
+})
+app.post("/adminLogin", (req, res) => {
+    console.log(req.body.email);
+    console.log(req.body.password);
+    adminCollection
+      .find({ email: req.body.email })
+      .toArray()
+      .then((result) => {
+        if (result.length < 1) {
+          console.log("user not found");
+          return res.send(false);
+        }
+        adminCollection
+          .find({ password: req.body.password })
+          .toArray()
+          .then((documents) => {
+            if (documents.length < 1) {
+              console.log("password not found");
+              return res.send(false);
+            } else {
+              res.send(true);
+              console.log("successfully logged in");
+            }
+          });
+      });
+  });
+  
+
 app.post('/isAdmin', (req, res) => {
     const email = req.body.email;
     adminCollection.find({ email: email })
@@ -97,6 +133,14 @@ app.post('/isAdmin', (req, res) => {
             res.send(admins.length > 0);
         })
   })
+
+  app.delete('/deleteProduct/:id', (req, res) => {
+    const id = ObjectId(req.params.id);
+    collection.findOneAndDelete({_id: id})
+    .then(product => res.send(product.value))
+})
+
+// client.close();
 });
 
 
