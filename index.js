@@ -78,7 +78,7 @@ app.post('/addAdmin', (request, res) => {
             res.send(result.insertedCount > 0);
         })
         adminCollection
-      .find({ email: req.body.email })
+      .find({ email: request.body.email })
       .toArray()
       .then((result) => {
         if (result.length < 1) {
@@ -86,7 +86,7 @@ app.post('/addAdmin', (request, res) => {
           return res.send(false);
         }
         adminCollection
-          .find({ password: req.body.password })
+          .find({ password: request.body.password })
           .toArray()
           .then((documents) => {
             if (documents.length < 1) {
